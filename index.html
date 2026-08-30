@@ -12,7 +12,16 @@
             margin: 0;
             padding: 20px;
             user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
         }
+
+        *, *::before, *::after {
+            box-sizing: inherit;
+        }
+
         #game-card {
             max-width: 650px;
             margin: 0 auto;
@@ -22,6 +31,7 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.15);
             position: relative;
         }
+
         .header-panel {
             display: flex;
             justify-content: space-between;
@@ -32,15 +42,19 @@
             background: #fff0f5;
             padding: 10px 20px;
             border-radius: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .canvas-container {
             position: relative;
-            width: 500px;
-            height: 500px;
+            width: min(500px, 90vw);
+            height: min(500px, 90vw);
+            max-width: 500px;
+            max-height: 500px;
             margin: 0 auto;
         }
-        
+
         #top-score-banner {
             position: absolute;
             top: 15px;
@@ -57,12 +71,16 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             z-index: 5;
             animation: fadeIn 0.2s ease-in-out;
+            flex-wrap: wrap;
+            gap: 6px 12px;
         }
+
         .banner-item {
             font-size: 15px;
             font-weight: bold;
             color: #e65100;
         }
+
         .banner-score {
             font-size: 20px;
             color: #d84315;
@@ -70,13 +88,16 @@
         }
 
         canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
             border: 3px solid #ff80ab;
             background-color: #ffffff;
             cursor: pointer;
             border-radius: 12px;
             touch-action: none;
-            box-sizing: border-box;
         }
+
         .btn {
             padding: 12px 24px;
             font-size: 16px;
@@ -90,8 +111,17 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             transition: 0.2s;
         }
-        .btn:hover { background-color: #f50057; transform: translateY(-2px); }
-        .btn:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
+
+        .btn:hover {
+            background-color: #f50057;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
 
         input[type="text"] {
             padding: 10px;
@@ -99,10 +129,11 @@
             border: 2px solid #ff80ab;
             border-radius: 8px;
             width: 70%;
+            max-width: 320px;
             margin-bottom: 15px;
             text-align: center;
         }
-        
+
         .report-container {
             max-height: 300px;
             overflow-y: auto;
@@ -110,25 +141,75 @@
             border: 1px solid #ffe4e8;
             border-radius: 8px;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
+
         th, td {
             padding: 10px;
             border-bottom: 1px solid #ddd;
             font-size: 14px;
         }
-        th { 
-            background-color: #ffe4e8; 
+
+        th {
+            background-color: #ffe4e8;
             position: sticky;
             top: 0;
             z-index: 1;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translate(-50%, -10px); }
-            to { opacity: 1; transform: translate(-50%, 0); }
+            from {
+                opacity: 0;
+                transform: translate(-50%, -10px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            #game-card {
+                padding: 16px;
+                border-radius: 16px;
+            }
+
+            .header-panel {
+                font-size: 15px;
+                padding: 10px 12px;
+                justify-content: center;
+            }
+
+            .banner-item {
+                font-size: 13px;
+            }
+
+            .banner-score {
+                font-size: 18px;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 320px;
+                margin: 8px auto;
+                display: block;
+            }
+
+            input[type="text"] {
+                width: 100%;
+            }
+
+            th, td {
+                font-size: 13px;
+                padding: 8px;
+            }
         }
     </style>
 </head>
@@ -155,10 +236,10 @@
                 <div class="banner-item">🎯 라운드 점수: <span class="banner-score" id="banner-round-score">0점</span></div>
                 <div class="banner-item">📏 <span id="banner-std-dev">거리의 오차: 0</span></div>
             </div>
-            
+
             <canvas id="gameCanvas" width="500" height="500"></canvas>
         </div>
-        
+
         <div id="instruction" style="margin-top: 10px; font-weight: bold; color: #444;">
             원하는 위치를 클릭하거나 누른 채로 끌어서 종(🔔)을 놓아보세요!
         </div>
@@ -172,12 +253,17 @@
         <h3>🎉 게임 종료! 🎉</h3>
         <p>수고하셨습니다, <strong id="final-player"></strong>님!</p>
         <div style="font-size: 36px; color: #ff4081; font-weight: bold; margin-bottom: 15px;" id="final-score">0점</div>
-        
+
         <h4>📊 라운드별 상세 리포트</h4>
         <div class="report-container">
             <table>
                 <thead>
-                    <tr><th>라운드</th><th>유형</th><th>점수</th><th>거리 오차</th></tr>
+                    <tr>
+                        <th>라운드</th>
+                        <th>유형</th>
+                        <th>점수</th>
+                        <th>거리 오차</th>
+                    </tr>
                 </thead>
                 <tbody id="report-body"></tbody>
             </table>
@@ -192,6 +278,24 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+const startScreen = document.getElementById('start-screen');
+const playScreen = document.getElementById('play-screen');
+const endScreen = document.getElementById('end-screen');
+
+const nicknameInput = document.getElementById('nickname');
+const playerDisplay = document.getElementById('player-display');
+const stageText = document.getElementById('stage-text');
+const scoreText = document.getElementById('score-text');
+const instruction = document.getElementById('instruction');
+const confirmBtn = document.getElementById('confirm-btn');
+const nextBtn = document.getElementById('next-btn');
+const topScoreBanner = document.getElementById('top-score-banner');
+const bannerRoundScore = document.getElementById('banner-round-score');
+const bannerStdDev = document.getElementById('banner-std-dev');
+const finalPlayer = document.getElementById('final-player');
+const finalScore = document.getElementById('final-score');
+const reportBody = document.getElementById('report-body');
+
 let playerName = "";
 let currentStage = 0;
 let totalScore = 0;
@@ -200,8 +304,12 @@ let bellPoint = null;
 let isDragging = false;
 let isStageFinished = false;
 let currentPoints = [];
-
 let stageHistory = [];
+
+// 입력 장치 추적용 상태
+let activePointerId = null;
+let activeTouchId = null;
+let activeInputMode = null;
 
 const stageDefinitions = [
     { type: "line", name: "두 점" },
@@ -215,18 +323,23 @@ const stageDefinitions = [
 ];
 
 function isCollinear(p1, p2, p3) {
-    const area = Math.abs(p1.x * (p2.y - p3.y) + p2.x * (p3.y - p1.y) + p3.x * (p1.y - p2.y));
+    const area = Math.abs(
+        p1.x * (p2.y - p3.y) +
+        p2.x * (p3.y - p1.y) +
+        p3.x * (p1.y - p2.y)
+    );
     return area < 1500;
 }
 
 function generateRandomPoints(type) {
     const center = { x: 250, y: 250 };
     const margin = 80;
-    
+
     const rotate = (cx, cy, x, y, angle) => {
         const radians = (Math.PI / 180) * angle;
         const cos = Math.cos(radians);
         const sin = Math.sin(radians);
+
         return {
             x: Math.round(cos * (x - cx) - sin * (y - cy) + cx),
             y: Math.round(sin * (x - cx) + cos * (y - cy) + cy)
@@ -240,16 +353,22 @@ function generateRandomPoints(type) {
 
     while (!isValid) {
         points = [];
+
         if (type === "line") {
             const dist = randInt(120, 180);
             const angle = randInt(0, 360);
             const p1 = { x: center.x - dist, y: center.y };
             const p2 = { x: center.x + dist, y: center.y };
-            points = [rotate(center.x, center.y, p1.x, p1.y, angle), rotate(center.x, center.y, p2.x, p2.y, angle)];
+
+            points = [
+                rotate(center.x, center.y, p1.x, p1.y, angle),
+                rotate(center.x, center.y, p2.x, p2.y, angle)
+            ];
             isValid = true;
         } else if (type === "equilateral") {
             const r = randInt(110, 150);
             const angle = randInt(0, 360);
+
             for (let i = 0; i < 3; i++) {
                 const a = angle + i * 120;
                 points.push({
@@ -262,18 +381,22 @@ function generateRandomPoints(type) {
             const base = randInt(200, 270);
             const height = randInt(140, 230);
             const angle = randInt(0, 360);
+
             const p1 = { x: center.x - base / 2, y: center.y + height / 2 };
             const p2 = { x: center.x + base / 2, y: center.y + height / 2 };
             const p3 = { x: center.x, y: center.y - height / 2 };
+
             points = [p1, p2, p3].map(p => rotate(center.x, center.y, p.x, p.y, angle));
             isValid = !isCollinear(points[0], points[1], points[2]);
         } else if (type === "right") {
             const w = randInt(180, 250);
             const h = randInt(180, 250);
             const angle = randInt(0, 360);
+
             const p1 = { x: center.x - w / 2, y: center.y - h / 2 };
             const p2 = { x: center.x - w / 2, y: center.y + h / 2 };
             const p3 = { x: center.x + w / 2, y: center.y + h / 2 };
+
             points = [p1, p2, p3].map(p => rotate(center.x, center.y, p.x, p.y, angle));
             isValid = !isCollinear(points[0], points[1], points[2]);
         } else if (type === "acute") {
@@ -282,6 +405,7 @@ function generateRandomPoints(type) {
             const a1 = baseAngle;
             const a2 = a1 + randInt(95, 130);
             const a3 = a2 + randInt(95, 130);
+
             [a1, a2, a3].forEach(a => {
                 points.push({
                     x: Math.round(center.x + r * Math.cos((a * Math.PI) / 180)),
@@ -295,6 +419,7 @@ function generateRandomPoints(type) {
             const a1 = baseAngle;
             const a2 = a1 + randInt(40, 75);
             const a3 = a2 + randInt(40, 75);
+
             [a1, a2, a3].forEach(a => {
                 points.push({
                     x: Math.round(center.x + r * Math.cos((a * Math.PI) / 180)),
@@ -319,17 +444,259 @@ function generateRandomPoints(type) {
     }));
 }
 
-function startGame() {
-    const input = document.getElementById('nickname').value.trim();
-    if (!input) {
-        alert("닉네임을 입력해 주세요!");
+function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+}
+
+function getCanvasPosFromClient(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+    };
+}
+
+function resetInputState() {
+    activePointerId = null;
+    activeTouchId = null;
+    activeInputMode = null;
+    isDragging = false;
+}
+
+function placeOrGrabBell(pos) {
+    const clampedX = clamp(pos.x, 20, canvas.width - 20);
+    const clampedY = clamp(pos.y, 20, canvas.height - 20);
+
+    if (!bellPoint) {
+        bellPoint = { x: clampedX, y: clampedY };
+        isDragging = true;
+        confirmBtn.disabled = false;
+        instruction.innerText = "종(🔔)을 드래그해서 위치를 변경할 수 있습니다.";
+        draw();
+        return true;
+    }
+
+    const distanceFromBell = Math.hypot(clampedX - bellPoint.x, clampedY - bellPoint.y);
+
+    if (distanceFromBell < 45) {
+        isDragging = true;
+        draw();
+        return true;
+    }
+
+    if (!isStageFinished) {
+        bellPoint = { x: clampedX, y: clampedY };
+        isDragging = true;
+        draw();
+        return true;
+    }
+
+    return false;
+}
+
+function moveBell(pos) {
+    if (!isDragging || !bellPoint) {
         return;
     }
+
+    bellPoint.x = clamp(pos.x, 20, canvas.width - 20);
+    bellPoint.y = clamp(pos.y, 20, canvas.height - 20);
+    draw();
+}
+
+function endDrag() {
+    isDragging = false;
+}
+
+function onPointerDown(e) {
+    if (activeInputMode && activeInputMode !== 'pointer') {
+        return;
+    }
+
+    e.preventDefault();
+
+    activeInputMode = 'pointer';
+    activePointerId = e.pointerId;
+
+    const pos = getCanvasPosFromClient(e.clientX, e.clientY);
+    const started = placeOrGrabBell(pos);
+
+    if (started && canvas.setPointerCapture) {
+        try {
+            canvas.setPointerCapture(e.pointerId);
+        } catch (error) {
+            // 일부 브라우저 예외 방지
+        }
+    }
+}
+
+function onPointerMove(e) {
+    if (activeInputMode !== 'pointer' || e.pointerId !== activePointerId) {
+        return;
+    }
+
+    if (!isDragging) {
+        return;
+    }
+
+    e.preventDefault();
+    const pos = getCanvasPosFromClient(e.clientX, e.clientY);
+    moveBell(pos);
+}
+
+function onPointerEnd(e) {
+    if (activeInputMode !== 'pointer' || e.pointerId !== activePointerId) {
+        return;
+    }
+
+    e.preventDefault();
+
+    if (canvas.releasePointerCapture) {
+        try {
+            canvas.releasePointerCapture(e.pointerId);
+        } catch (error) {
+            // 이미 해제된 경우 무시
+        }
+    }
+
+    endDrag();
+    resetInputState();
+}
+
+function findTouchById(touchList, id) {
+    for (let i = 0; i < touchList.length; i++) {
+        if (touchList[i].identifier === id) {
+            return touchList[i];
+        }
+    }
+    return null;
+}
+
+function onTouchStart(e) {
+    if (activeInputMode) {
+        return;
+    }
+
+    const touch = e.changedTouches[0];
+    if (!touch) {
+        return;
+    }
+
+    e.preventDefault();
+
+    activeInputMode = 'touch';
+    activeTouchId = touch.identifier;
+
+    const pos = getCanvasPosFromClient(touch.clientX, touch.clientY);
+    placeOrGrabBell(pos);
+}
+
+function onTouchMove(e) {
+    if (activeInputMode !== 'touch') {
+        return;
+    }
+
+    const touch = findTouchById(e.touches, activeTouchId) || findTouchById(e.changedTouches, activeTouchId);
+    if (!touch || !isDragging) {
+        return;
+    }
+
+    e.preventDefault();
+
+    const pos = getCanvasPosFromClient(touch.clientX, touch.clientY);
+    moveBell(pos);
+}
+
+function onTouchEnd(e) {
+    if (activeInputMode !== 'touch') {
+        return;
+    }
+
+    const touch = findTouchById(e.changedTouches, activeTouchId);
+    if (!touch) {
+        return;
+    }
+
+    e.preventDefault();
+    endDrag();
+    resetInputState();
+}
+
+function onMouseDown(e) {
+    if (activeInputMode) {
+        return;
+    }
+
+    e.preventDefault();
+
+    activeInputMode = 'mouse';
+    const pos = getCanvasPosFromClient(e.clientX, e.clientY);
+    placeOrGrabBell(pos);
+}
+
+function onMouseMove(e) {
+    if (activeInputMode !== 'mouse' || !isDragging) {
+        return;
+    }
+
+    e.preventDefault();
+    const pos = getCanvasPosFromClient(e.clientX, e.clientY);
+    moveBell(pos);
+}
+
+function onMouseUp() {
+    if (activeInputMode !== 'mouse') {
+        return;
+    }
+
+    endDrag();
+    resetInputState();
+}
+
+function registerInputHandlers() {
+    if (window.PointerEvent) {
+        canvas.addEventListener('pointerdown', onPointerDown);
+        canvas.addEventListener('pointermove', onPointerMove);
+        canvas.addEventListener('pointerup', onPointerEnd);
+        canvas.addEventListener('pointercancel', onPointerEnd);
+        window.addEventListener('pointerup', onPointerEnd);
+        window.addEventListener('pointercancel', onPointerEnd);
+    } else {
+        canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+        window.addEventListener('touchmove', onTouchMove, { passive: false });
+        window.addEventListener('touchend', onTouchEnd, { passive: false });
+        window.addEventListener('touchcancel', onTouchEnd, { passive: false });
+
+        canvas.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+    }
+}
+
+function startGame() {
+    const input = nicknameInput.value.trim();
+
+    if (!input) {
+        alert("닉네임을 입력해 주세요!");
+        nicknameInput.focus();
+        return;
+    }
+
     playerName = input;
+    currentStage = 0;
+    totalScore = 0;
     stageHistory = [];
-    document.getElementById('player-display').innerText = `👤 ${playerName}`;
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('play-screen').style.display = 'block';
+
+    playerDisplay.innerText = `👤 ${playerName}`;
+    scoreText.innerText = `총점: ${totalScore}점`;
+
+    startScreen.style.display = 'none';
+    endScreen.style.display = 'none';
+    playScreen.style.display = 'block';
+
     loadStage();
 }
 
@@ -337,57 +704,20 @@ function loadStage() {
     bellPoint = null;
     isDragging = false;
     isStageFinished = false;
-    
+    resetInputState();
+
     currentPoints = generateRandomPoints(stageDefinitions[currentStage].type);
 
-    document.getElementById('top-score-banner').style.display = 'none';
-    document.getElementById('confirm-btn').style.display = 'inline-block';
-    document.getElementById('confirm-btn').disabled = true;
-    document.getElementById('next-btn').style.display = 'none';
-    
-    document.getElementById('stage-text').innerText = `ROUND ${currentStage + 1} / ${stageDefinitions.length}`;
-    document.getElementById('instruction').innerText = "원하는 위치를 클릭하거나 누른 채로 끌어서 종(🔔)을 놓아보세요!";
+    topScoreBanner.style.display = 'none';
+    confirmBtn.style.display = 'inline-block';
+    confirmBtn.disabled = true;
+    nextBtn.style.display = 'none';
+
+    stageText.innerText = `ROUND ${currentStage + 1} / ${stageDefinitions.length}`;
+    instruction.innerText = "원하는 위치를 클릭하거나 누른 채로 끌어서 종(🔔)을 놓아보세요!";
+
     draw();
 }
-
-function getCanvasPos(e) {
-    const rect = canvas.getBoundingClientRect();
-    return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-    };
-}
-
-canvas.addEventListener('mousedown', function(e) {
-    const pos = getCanvasPos(e);
-
-    if (!bellPoint) {
-        bellPoint = { x: pos.x, y: pos.y };
-        isDragging = true;
-        document.getElementById('confirm-btn').disabled = false;
-        document.getElementById('instruction').innerText = "종(🔔)을 드래그해서 위치를 변경할 수 있습니다.";
-    } else {
-        if (Math.hypot(pos.x - bellPoint.x, pos.y - bellPoint.y) < 45) {
-            isDragging = true;
-        } else if (!isStageFinished) {
-            bellPoint = { x: pos.x, y: pos.y };
-            isDragging = true;
-        }
-    }
-    draw();
-});
-
-canvas.addEventListener('mousemove', function(e) {
-    if (!isDragging || !bellPoint) return;
-    const pos = getCanvasPos(e);
-    bellPoint.x = Math.max(20, Math.min(canvas.width - 20, pos.x));
-    bellPoint.y = Math.max(20, Math.min(canvas.height - 20, pos.y));
-    draw();
-});
-
-window.addEventListener('mouseup', function() {
-    isDragging = false;
-});
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -438,6 +768,7 @@ function draw() {
 
     currentPoints.forEach((p, idx) => {
         let emoji = "🙂";
+
         if (isStageFinished && distances && avgDist) {
             const diff = distances[idx] - avgDist;
             if (Math.abs(diff) > 20) {
@@ -446,6 +777,7 @@ function draw() {
                 emoji = "😊";
             }
         }
+
         ctx.font = "32px serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -461,16 +793,19 @@ function draw() {
 }
 
 function confirmPosition() {
-    if (isStageFinished || !bellPoint) return;
+    if (isStageFinished || !bellPoint) {
+        return;
+    }
+
     isStageFinished = true;
 
     const distances = currentPoints.map(p => Math.hypot(p.x - bellPoint.x, p.y - bellPoint.y));
     const avgDist = distances.reduce((a, b) => a + b, 0) / distances.length;
-    
+
     const variance = distances.reduce((a, b) => a + Math.pow(b - avgDist, 2), 0) / distances.length;
     const stdDev = Math.sqrt(variance);
 
-    let roundScore = Math.max(0, Math.round(100 - (stdDev * 2.5)));
+    const roundScore = Math.max(0, Math.round(100 - (stdDev * 2.5)));
     totalScore += roundScore;
 
     stageHistory.push({
@@ -485,26 +820,26 @@ function confirmPosition() {
 }
 
 function showTopScoreBanner(roundScore, stdDev) {
-    document.getElementById('banner-round-score').innerText = `${roundScore}점`;
-    document.getElementById('banner-std-dev').innerText = `거리의 오차: ${stdDev.toFixed(1)}`;
-    document.getElementById('score-text').innerText = `총점: ${totalScore}점`;
-    
-    document.getElementById('top-score-banner').style.display = 'flex';
-    document.getElementById('confirm-btn').style.display = 'none';
+    bannerRoundScore.innerText = `${roundScore}점`;
+    bannerStdDev.innerText = `거리의 오차: ${stdDev.toFixed(1)}`;
+    scoreText.innerText = `총점: ${totalScore}점`;
 
-    const nextBtn = document.getElementById('next-btn');
+    topScoreBanner.style.display = 'flex';
+    confirmBtn.style.display = 'none';
+
     if (currentStage === stageDefinitions.length - 1) {
         nextBtn.innerText = "최종 점수 확인하기 🏆";
     } else {
         nextBtn.innerText = "다음 라운드 ➔";
     }
-    nextBtn.style.display = 'inline-block';
 
-    document.getElementById('instruction').innerText = "💡 종(🔔)을 끌어보며 실시간 오차 변화를 관찰해 보세요!";
+    nextBtn.style.display = 'inline-block';
+    instruction.innerText = "💡 종(🔔)을 끌어보며 실시간 오차 변화를 관찰해 보세요!";
 }
 
 function nextStage() {
     currentStage++;
+
     if (currentStage < stageDefinitions.length) {
         loadStage();
     } else {
@@ -513,37 +848,69 @@ function nextStage() {
 }
 
 function showFinalReportScreen() {
-    document.getElementById('play-screen').style.display = 'none';
-    document.getElementById('end-screen').style.display = 'block';
-    document.getElementById('final-player').innerText = playerName;
-    document.getElementById('final-score').innerText = `${totalScore}점`;
+    playScreen.style.display = 'none';
+    endScreen.style.display = 'block';
+    finalPlayer.innerText = playerName;
+    finalScore.innerText = `${totalScore}점`;
 
     renderReportTable();
 }
 
 function renderReportTable() {
-    const tbody = document.getElementById('report-body');
-    tbody.innerHTML = "";
+    reportBody.innerHTML = "";
+
     stageHistory.forEach(item => {
-        tbody.innerHTML += `
-            <tr>
-                <td>ROUND ${item.round}</td>
-                <td>${item.typeName}</td>
-                <td><strong>${item.score}점</strong></td>
-                <td>${item.stdDev}</td>
-            </tr>
-        `;
+        const tr = document.createElement('tr');
+
+        const tdRound = document.createElement('td');
+        tdRound.innerText = `ROUND ${item.round}`;
+
+        const tdType = document.createElement('td');
+        tdType.innerText = item.typeName;
+
+        const tdScore = document.createElement('td');
+        const strong = document.createElement('strong');
+        strong.innerText = `${item.score}점`;
+        tdScore.appendChild(strong);
+
+        const tdStdDev = document.createElement('td');
+        tdStdDev.innerText = item.stdDev;
+
+        tr.appendChild(tdRound);
+        tr.appendChild(tdType);
+        tr.appendChild(tdScore);
+        tr.appendChild(tdStdDev);
+
+        reportBody.appendChild(tr);
     });
 }
 
 function restartGame() {
     currentStage = 0;
     totalScore = 0;
+    bellPoint = null;
+    isDragging = false;
+    isStageFinished = false;
+    currentPoints = [];
     stageHistory = [];
-    document.getElementById('end-screen').style.display = 'none';
-    document.getElementById('start-screen').style.display = 'block';
-    document.getElementById('nickname').value = "";
+    resetInputState();
+
+    endScreen.style.display = 'none';
+    playScreen.style.display = 'none';
+    startScreen.style.display = 'block';
+
+    nicknameInput.value = "";
+    nicknameInput.focus();
 }
+
+nicknameInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        startGame();
+    }
+});
+
+registerInputHandlers();
+draw();
 </script>
 
 </body>
